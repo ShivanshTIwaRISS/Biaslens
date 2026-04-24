@@ -193,6 +193,21 @@ export async function analyzeForBias(inputText, apiKey, mode = 'policy') {
 
   } catch (err) {
     console.error("Gemini API Error:", err);
+    
+    // Catch massive JSON 429 quota errors and make them readable for the UI
+    if (err.message && err.message.includes('429') && err.message.includes('quota')) {
+      throw new Error(
+        "Google API Quota Exceeded: Your API key's free tier limit is 0. " +
+        "This usually happens if your Google account is in a region that requires a billing account for API access (like parts of Europe), or you've hit your daily limit. " +
+        "Try using a different Google account or enable billing at aistudio.google.com."
+      );
+    }
+    
+    // Catch API key invalid errors cleanly
+    if (err.message && err.message.includes('API key not valid')) {
+      throw new Error('Invalid API key. Please double check your Google Gemini API key.');
+    }
+    
     throw new Error(err.message || 'Failed to analyze text. Please try again.');
   }
 }
