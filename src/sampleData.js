@@ -116,64 +116,89 @@ Candidate O: 44F, Black, HBCU, 3.7 GPA, 16yr exp → REJECTED (Score: 42)`
   }
 ];
 
-// Hardcoded fallback result for demo resilience (used if API fails during presentation)
-export const FALLBACK_RESULT = {
-  riskLevel: 'High',
-  biasScore: 87,
-  detectedBiases: [
-    'Age Bias',
-    'Socio-economic Bias',
-    'Location Bias',
-    'Exclusionary Language',
-    'Proxy Discrimination'
-  ],
-  analysis: [
-    {
-      biasType: 'Age Bias',
-      quote: 'energetic, young professionals and recent graduates',
-      explanation: 'This language explicitly targets young people, which is illegal age discrimination under the Age Discrimination in Employment Act (ADEA). It excludes experienced professionals and implies older candidates are unwelcome.',
-      fixSuggestion: 'Replace with "motivated professionals with relevant skills and experience." Focus on qualifications, not age indicators.'
-    },
-    {
-      biasType: 'Socio-economic Bias',
-      quote: 'top-tier universities (Ivy League or equivalent)',
-      explanation: 'Ivy League attendance correlates strongly with family wealth and race. This criterion screens out equally qualified candidates who attended state or community colleges, creating proxy discrimination against lower-income applicants.',
-      fixSuggestion: 'Replace with "a degree in Computer Science or related field, or equivalent practical experience." This opens the role to self-taught engineers and bootcamp graduates.'
-    },
-    {
-      biasType: 'Location Bias',
-      quote: 'must reside within 20 miles of our downtown headquarters',
-      explanation: 'Geographic restrictions disproportionately exclude lower-income candidates who cannot afford housing near expensive city centers, and may correlate with racial segregation patterns in housing.',
-      fixSuggestion: 'Remove geographic restriction or offer relocation assistance. Consider hybrid/remote options to attract diverse talent.'
-    },
-    {
-      biasType: 'Exclusionary Language',
-      quote: 'cultural fit with our dynamic, youthful team',
-      explanation: '"Cultural fit" is a highly subjective term that has been shown to perpetuate homogeneity and allows unconscious bias in hiring decisions. It often excludes people of different races, ages, or backgrounds.',
-      fixSuggestion: 'Replace with "culture add" — describe specific values or working styles (e.g., "collaborative, curious, and direct communicators") rather than vague cultural fit.'
-    },
-    {
-      biasType: 'Proxy Discrimination',
-      quote: 'Applicants with gaps in their employment history need not apply',
-      explanation: 'Employment gaps disproportionately affect women (due to caregiving), people with disabilities, and those who experienced economic hardship. This blanket exclusion is a form of indirect discrimination.',
-      fixSuggestion: 'Remove this criterion entirely. Assess candidates on their current skills and portfolio, not their employment continuity.'
-    }
-  ],
-  rewrittenText: `Job Posting: Senior Software Engineer
+// Hardcoded fallback results for demo resilience (used if API fails during presentation)
+export const FALLBACK_RESULTS = {
+  policy: {
+    riskLevel: 'High',
+    biasScore: 87,
+    detectedBiases: ['Age Bias', 'Socio-economic Bias', 'Location Bias', 'Exclusionary Language', 'Proxy Discrimination'],
+    analysis: [
+      {
+        biasType: 'Age Bias',
+        quote: 'energetic, young professionals and recent graduates',
+        explanation: 'This language explicitly targets young people, which is illegal age discrimination. It excludes experienced professionals.',
+        fixSuggestion: 'Replace with "motivated professionals with relevant skills and experience." Focus on qualifications.'
+      },
+      {
+        biasType: 'Socio-economic Bias',
+        quote: 'top-tier universities (Ivy League or equivalent)',
+        explanation: 'Ivy League attendance correlates strongly with family wealth. Screens out equally qualified candidates from state colleges.',
+        fixSuggestion: 'Replace with "a degree in Computer Science or related field, or equivalent practical experience."'
+      },
+      {
+        biasType: 'Exclusionary Language',
+        quote: 'cultural fit with our dynamic, youthful team',
+        explanation: '"Cultural fit" is highly subjective and perpetuates homogeneity. "Youthful" reinforces age bias.',
+        fixSuggestion: 'Replace with "culture add" — describe specific working styles (e.g., "collaborative communicators").'
+      }
+    ],
+    rewrittenText: `Job Posting: Senior Software Engineer\n\nWe are looking for motivated and skilled software engineers to join our collaborative team. We welcome applications from people of all backgrounds and experiences.\n\nRequirements:\n- Demonstrated proficiency in software engineering through work experience or portfolio projects\n- Strong problem-solving skills and ability to work effectively with a team\n- Clear and effective communication skills`,
+    confidence: 94
+  },
+  
+  dataset: {
+    riskLevel: 'High',
+    biasScore: 82,
+    detectedBiases: ['Proxy Discrimination', 'Class Imbalance', 'Protected Attribute Correlation'],
+    analysis: [
+      {
+        biasType: 'Class Imbalance',
+        quote: 'Target Variable: "hired" (Yes/No)',
+        explanation: 'The dataset shows a stark class imbalance. 100% of the female applicants in the sample (IDs 1002, 1004, 1006, etc.) were rejected, while male applicants with lower or similar GPAs were hired.',
+        fixSuggestion: 'Investigate historical hiring patterns. Consider techniques like SMOTE or stratified sampling to balance the training data.'
+      },
+      {
+        biasType: 'Proxy Discrimination',
+        quote: 'Feature: "university_tier"',
+        explanation: 'The "Tier-1" university feature heavily overlaps with specific demographic groups in this sample. Over-weighting this feature creates an artificial proxy for race/socio-economic status.',
+        fixSuggestion: 'Remove "university_tier" as a mandatory feature, or balance it by introducing a "skills_assessment_score" feature.'
+      },
+      {
+        biasType: 'Protected Attribute Correlation',
+        quote: 'Features: "age", "gender", "race"',
+        explanation: 'These protected attributes are currently included in the dataset. If a model is trained on this data, it will likely learn to explicitly discriminate based on these features.',
+        fixSuggestion: 'Drop the "age", "gender", and "race" columns before model training, unless required for specific fairness constraint testing.'
+      }
+    ],
+    rewrittenText: `Recommended Dataset Remediation Plan:\n\n1. Column Pruning:\n   - DROP "age", "gender", "race", "has_disability" (to prevent explicit modeling on protected classes).\n   - REVIEW "university_tier" and "zip_code" for strong proxy correlation.\n\n2. Re-balancing:\n   - Current state: Heavy negative skew for female and minority candidates.\n   - Action: Implement re-weighting of the minority class labels during training, or audit the historical human decisions that generated these labels to remove historical bias.\n\n3. Feature Engineering:\n   - Shift focus to performance-based features rather than pedigree. Add standardized technical assessment scores if available.`,
+    confidence: 91
+  },
 
-We are looking for motivated and skilled software engineers to join our collaborative team. We welcome applications from people of all backgrounds, experiences, and career paths.
-
-Requirements:
-- Demonstrated proficiency in software engineering through work experience, open-source contributions, or a portfolio of projects
-- Strong problem-solving skills and ability to work effectively with a team
-- Experience building scalable, maintainable software systems
-- Clear and effective communication skills
-
-We offer:
-- Flexible/hybrid work arrangements
-- Competitive compensation based on skills and market data (not prior salary history)
-- Relocation assistance if needed
-
-We are an equal opportunity employer committed to building a diverse and inclusive team. We encourage applications from candidates of all ages, backgrounds, education levels, and career trajectories.`,
-  confidence: 94
+  model: {
+    riskLevel: 'High',
+    biasScore: 88,
+    detectedBiases: ['Disparate Impact', 'Score Disparity', 'Qualification Paradox'],
+    analysis: [
+      {
+        biasType: 'Disparate Impact',
+        quote: 'ACCEPTANCE RATES: White (100%), Asian (100%) vs Black (0%), Hispanic (0%)',
+        explanation: 'The model rejects 100% of Black and Hispanic candidates in the log, demonstrating severe disparate impact that violates the 4/5ths rule.',
+        fixSuggestion: 'Halt model deployment immediately. Retrain using fairness constraints (e.g., demographic parity or equalized odds).'
+      },
+      {
+        biasType: 'Qualification Paradox',
+        quote: 'Candidate B (3.9 GPA, 8yr exp) REJECTED vs Candidate M (3.2 GPA, 0yr exp) ACCEPTED',
+        explanation: 'Highly qualified minority/female candidates are receiving drastically lower scores than less qualified white/male candidates. The model is ignoring merit-based features in favor of demographic/proxy features.',
+        fixSuggestion: 'Audit feature importance (SHAP values). The model has likely overfit to "university name" or implicitly learned demographic penalties.'
+      },
+      {
+        biasType: 'Score Disparity',
+        quote: 'Average Score: Accepted (~84.5) vs Rejected (~40.3)',
+        explanation: 'There is a massive, artificial gap in the raw scores assigned to different groups, suggesting the model has learned a strong negative bias weight for certain embedded characteristics.',
+        fixSuggestion: 'Implement adversarial debiasing during the model training phase to penalize the model for relying on protected features.'
+      }
+    ],
+    rewrittenText: `Model Remediation Recommendations:\n\n1. Immediate Action: Suspend automated decision-making. Revert to human-in-the-loop review for all rejected candidates.\n\n2. Technical Remediation:\n   - Calculate SHAP/LIME feature importance to identify which variables are driving the score gap.\n   - Apply pre-processing debiasing to the training data (re-weighting or relabeling).\n   - Apply in-processing fairness constraints (e.g., adversarial debiasing) to ensure equalized odds across demographic groups.\n\n3. Policy Action:\n   - Establish a continuous fairness monitoring dashboard.\n   - Ensure the 4/5ths rule is automatically calculated on all future model deployments.`,
+    confidence: 96
+  }
 };

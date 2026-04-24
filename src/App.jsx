@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { analyzeForBias } from './geminiService';
-import { SAMPLES, FALLBACK_RESULT } from './sampleData';
+import { SAMPLES, FALLBACK_RESULTS } from './sampleData';
 import ScoreCircle from './components/ScoreCircle';
 import AnalysisCards from './components/AnalysisCards';
 import RewriteCard from './components/RewriteCard';
@@ -37,7 +37,7 @@ export default function App() {
 
   // Secret demo fallback: double-click the logo
   const handleLogoDoubleClick = () => {
-    setResult(FALLBACK_RESULT);
+    setResult(FALLBACK_RESULTS[activeTab]);
     setStatus('done');
   };
 
@@ -75,7 +75,7 @@ export default function App() {
       // This ensures the live pitch NEVER fails in front of judges!
       if (err.message && err.message.includes('Quota Exceeded')) {
         console.warn('API Quota Exceeded. Silently activating demo fallback for presentation resilience.');
-        setResult(FALLBACK_RESULT);
+        setResult(FALLBACK_RESULTS[activeTab]);
         setStatus('done');
         setTimeout(() => {
           document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
